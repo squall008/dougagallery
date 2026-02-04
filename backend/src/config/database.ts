@@ -7,7 +7,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const isPostgres = !!process.env.DATABASE_URL;
+const DATABASE_URL = process.env.DATABASE_URL;
+const isPostgres = !!DATABASE_URL;
+
+if (isPostgres) {
+  const redactedUrl = DATABASE_URL?.replace(/:([^@]+)@/, ':****@');
+  console.log('Database URL detected:', redactedUrl);
+}
 
 // --- SQLite Setup ---
 const dbDir = path.join(__dirname, '../../data');
