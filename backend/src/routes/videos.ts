@@ -56,7 +56,7 @@ router.get('/', async (req: Request, res: Response) => {
             paramIndex += tagIds.length;
         }
 
-        queryText += ' GROUP BY v.id';
+        queryText += ' GROUP BY v.id, u.username, c.name';
 
         switch (sort) {
             case 'oldest':
@@ -138,7 +138,7 @@ router.get('/:id', async (req: Request, res: Response) => {
             LEFT JOIN video_tags vt ON v.id = vt.video_id
             LEFT JOIN tags t ON vt.tag_id = t.id
             WHERE v.id = $1
-            GROUP BY v.id`,
+            GROUP BY v.id, u.username, c.name`,
             [id]
         );
 
