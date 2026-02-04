@@ -22,7 +22,7 @@ router.get('/', async (req: Request, res: Response) => {
 
         let queryText = `
       SELECT v.*, u.username, c.name as category_name,
-        GROUP_CONCAT(t.name) as tags_list
+        string_agg(t.name, ',') as tags_list
       FROM videos v
       JOIN users u ON v.user_id = u.id
       LEFT JOIN categories c ON v.category_id = c.id
@@ -131,7 +131,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
         const result = await query(
             `SELECT v.*, u.username, c.name as category_name,
-                GROUP_CONCAT(t.id || ':' || t.name) as tags_info
+                string_agg(t.id || ':' || t.name, ',') as tags_info
             FROM videos v
             JOIN users u ON v.user_id = u.id
             LEFT JOIN categories c ON v.category_id = c.id
@@ -218,7 +218,7 @@ router.post('/', upload.single('video'), async (req: Request, res: Response) => 
                 const tagId = tagResult.rows[0].id;
 
                 await query(
-                    'INSERT OR IGNORE INTO video_tags (video_id, tag_id) VALUES ($1, $2)',
+                    'INSERT INTO video_tags (video_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
                     [video.id, tagId]
                 );
             }
@@ -262,7 +262,7 @@ router.put('/:id', async (req: Request, res: Response) => {
                 const tagResult = await query('SELECT id FROM tags WHERE name = $1', [tagName.trim()]);
                 const tagId = tagResult.rows[0].id;
 
-                await query('INSERT OR IGNORE INTO video_tags (video_id, tag_id) VALUES ($1, $2)', [id, tagId]);
+                await query('INSERT INTO video_tags (video_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [id, tagId]);
             }
         }
 

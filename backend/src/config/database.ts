@@ -203,7 +203,7 @@ export const initDatabase = async () => {
           ['その他', 'その他の動画'],
         ];
         for (const cat of categories) {
-          await pool.query('INSERT INTO categories (name, description) VALUES ($1, $2)', cat);
+          await pool.query('INSERT INTO categories (name, description) VALUES ($1, $2) ON CONFLICT(name) DO NOTHING', cat);
         }
       }
 
@@ -212,7 +212,7 @@ export const initDatabase = async () => {
       if (parseInt(userRes.rows[0].count) === 0) {
         console.log('PostgreSQL: Creating default anonymous user...');
         await pool.query(
-          'INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)',
+          'INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4) ON CONFLICT(id) DO NOTHING',
           [1, 'anonymous', 'anonymous@example.com', 'no-password']
         );
         // Reset sequence for SERIAL to avoid conflicts
