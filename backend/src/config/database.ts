@@ -189,6 +189,35 @@ export const initDatabase = async () => {
       } else {
         console.log('PostgreSQL: Schema already exists.');
       }
+
+      // Check for default categories
+      const catRes = await pool.query('SELECT COUNT(*) as count FROM categories');
+      if (parseInt(catRes.rows[0].count) === 0) {
+        console.log('PostgreSQL: Inserting default categories...');
+        const categories = [
+          ['エンターテイメント', 'エンターテイメント関連の動画'],
+          ['教育', '教育・学習関連の動画'],
+          ['音楽', '音楽関連の動画'],
+          ['スポーツ', 'スポーツ関連の動画'],
+          ['ゲーム', 'ゲーム関連の動画'],
+          ['その他', 'その他の動画'],
+        ];
+        for (const cat of categories) {
+          await pool.query('INSERT INTO categories (name, description) VALUES ($1, $2)', cat);
+        }
+      }
+
+      // Check for default user
+      const userRes = await pool.query('SELECT COUNT(*) as count FROM users');
+      if (parseInt(userRes.rows[0].count) === 0) {
+        console.log('PostgreSQL: Creating default anonymous user...');
+        await pool.query(
+          'INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)',
+          [1, 'anonymous', 'anonymous@example.com', 'no-password']
+        );
+        // Reset sequence for SERIAL to avoid conflicts
+        await pool.query("SELECT setval(pg_get_serial_sequence('users', 'id'), (SELECT MAX(id) FROM users))");
+      }
     } catch (error) {
       console.error('PostgreSQL initialization error:', error);
     }
