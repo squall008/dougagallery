@@ -2,6 +2,7 @@ services:
   - type: web
     name: video-gallery
     env: node
+    plan: free
     buildCommand: npm run install:all && npm run build
     startCommand: npm start
     envVars:
