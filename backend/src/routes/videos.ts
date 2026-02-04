@@ -210,7 +210,7 @@ router.post('/', upload.single('video'), async (req: Request, res: Response) => 
             const tagArray = typeof tags === 'string' ? JSON.parse(tags) : tags;
             for (const tagName of tagArray) {
                 await query(
-                    'INSERT INTO tags (name) VALUES ($1) ON CONFLICT(name) DO UPDATE SET name = name',
+                    'INSERT INTO tags (name) VALUES ($1) ON CONFLICT(name) DO UPDATE SET name = EXCLUDED.name',
                     [tagName.trim()]
                 );
 
@@ -256,7 +256,7 @@ router.put('/:id', async (req: Request, res: Response) => {
             const tagArray = typeof tags === 'string' ? JSON.parse(tags) : tags;
             for (const tagName of tagArray) {
                 await query(
-                    'INSERT INTO tags (name) VALUES ($1) ON CONFLICT(name) DO UPDATE SET name = name',
+                    'INSERT INTO tags (name) VALUES ($1) ON CONFLICT(name) DO UPDATE SET name = EXCLUDED.name',
                     [tagName.trim()]
                 );
                 const tagResult = await query('SELECT id FROM tags WHERE name = $1', [tagName.trim()]);
