@@ -157,15 +157,37 @@ export const initDatabase = async () => {
     try {
       const { rows } = await pool.query("SELECT to_regclass('public.users') as table_exists");
       if (!rows[0].table_exists) {
-        console.log('PostgreSQL: Initializing schema...');
-        const sqlPath = path.join(__dirname, '../migrations/init.sql');
-        if (fs.existsSync(sqlPath)) {
-          const sql = fs.readFileSync(sqlPath, 'utf8');
+        console.log('PostgreSQL: Users table not found. Initializing schema...');
+
+        // Try multiple possible paths for init.sql (TS source and JS dist)
+        const possiblePaths = [
+          path.join(__dirname, '../migrations/init.sql'),
+          path.join(__dirname, '../../src/migrations/init.sql'),
+          path.join(process.cwd(), 'src/migrations/init.sql'),
+          path.join(process.cwd(), 'backend/src/migrations/init.sql')
+        ];
+
+        let sql = '';
+        let foundPath = '';
+
+        for (const sqlPath of possiblePaths) {
+          console.log(`Checking for init.sql at: ${sqlPath}`);
+          if (fs.existsSync(sqlPath)) {
+            sql = fs.readFileSync(sqlPath, 'utf8');
+            foundPath = sqlPath;
+            break;
+          }
+        }
+
+        if (sql) {
+          console.log(`PostgreSQL: Loading schema from ${foundPath}`);
           await pool.query(sql);
           console.log('PostgreSQL: Schema initialized successfully.');
         } else {
-          console.warn('PostgreSQL: init.sql not found at', sqlPath);
+          console.error('PostgreSQL Error: Could not find init.sql in any of the expected locations.');
         }
+      } else {
+        console.log('PostgreSQL: Schema already exists.');
       }
     } catch (error) {
       console.error('PostgreSQL initialization error:', error);
